@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class LaptopLine:
     def __init__(self, line):
@@ -26,7 +26,7 @@ class LaptopFile:
         self.batchNumber, self.objectNumber, self.trialNumber = map(int, info)
 
         clkDiff = lines[1][:-1]
-        self.clockDifference = int(clkDiff[61:])
+        self.clockDifference = timedelta(microseconds=int(clkDiff[61:]))
 
         servoStart = lines[2][:-1]
         self.servoStartPos = servoStart[18:]
@@ -56,22 +56,22 @@ class LabViewLine(object):
         self.timeStamp = datetime.strptime(line[:25]+'0000', dateSetting)
 
         if 'Both Rigid bodies out of volume?' in line:
-            self.x1, self.y1, self.z1 = 0.0, 0.0, 0.0
-            self.q1_0, self.q1_1, self.q1_2, self.q1_2 = 0.0, 0.0, 0.0, 0.0
+            self.vec1 = [0.0, 0.0, 0.0]
+            self.qua1 = [0.0, 0.0, 0.0, 0.0]
             
-            self.x2, self.y2, self.z2 = 0.0, 0.0, 0.0
-            self.q2_0, self.q2_1, self.q2_2, self.q2_2 = 0.0, 0.0, 0.0, 0.0
+            self.vec2 = [0.0, 0.0, 0.0]
+            self.qua2 = [0.0, 0.0, 0.0, 0.0]
 
         else:
             data = line[line.find(':')+1:].split('***')
 
             tool1= data[0].split(',')
-            self.x1, self.y1, self.z1 = map(float, tool1[:3])
-            self.q1_0, self.q1_1, self.q1_2, self.q1_2 = map(float, tool1[3:-1])
+            self.vec1 = map(float, tool1[:3])
+            self.qua1 = map(float, tool1[3:-1])
 
             tool2 = data[1].split(',')
-            self.x2, self.y2, self.z2 = map(float, tool2[:3])
-            self.q2_0, self.q2_1, self.q2_2, self.q2_2 = map(float, tool2[3:])
+            self.vec2 = map(float, tool2[:3])
+            self.qua2 = map(float, tool2[3:])
 
     def __repr__(self):
         return 'Data from time {}'.format(self.timeStamp)
