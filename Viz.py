@@ -2,6 +2,7 @@ from LineSampler import LabViewFile, LaptopFile
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
+from rigidTrans import rotMatFromQuat, extVec, homogenousTransformationMatrix
 
 def quaMul(q1,q2):
     w1, x1, y1, z1 = q1
@@ -35,8 +36,8 @@ def frameTransform(quat, trans):
 
 class trialData:
     def __init__(self, laptopFname, labViewFname):
-        topFile = LaptopFile(laptopFname)    #'59435648-0-1000.txt')
-        labFile = LabViewFile(labViewFname)  #'59435648-0-1000-2016-05-15-at-23-36-37 .txt')
+        topFile = LaptopFile(laptopFname)
+        labFile = LabViewFile(labViewFname)
 
         self.batchNumber     = topFile.batchNumber
         self.objectNumber    = topFile.objectNumber
@@ -50,6 +51,10 @@ class trialData:
         self.tool1   = labFile.tool1
         self.tool2   = labFile.tool2
         self.labData = labFile.data
+
+        self.trackerToBowl = np.loadtxt('248Calibration.txt', delimiter=',')
+        self.palmToTool1 = np.loadtxt('449Calibration.txt', delimiter=',')
+        self.palmToTool2 = np.loadtxt('339Calibration.txt', delimiter=',')
 
         self._synchronize()
 
@@ -93,6 +98,9 @@ class trialData:
         return ((x_min,x_max),(y_min,y_max),(z_min,z_max))
 
 
+    def _referenceTransformation():
+        return
+
     def plotData(self, fname):
         for i in range(len(self.labData)):
             fig = plt.figure(figsize=(16,9), dpi=100)
@@ -106,18 +114,22 @@ class trialData:
             plt.ylim([14000,18000])
             plt.title(str(self.topData[i].startTime))
 
+            ### TODO: do proper transformations
             vec1 = self.labData[i].vec1
             qua1 = self.labData[i].qua1
             x1,y1,z1 =  frameTransform(qua1, vec1)
+            ###
 
             ax = fig.add_subplot(122, projection='3d')
             ax.plot([x1[0],vec1[0]],[x1[1],vec1[1]],[x1[2],vec1[2]])
             ax.plot([y1[0],vec1[0]],[y1[1],vec1[1]],[y1[2],vec1[2]])
             ax.plot([z1[0],vec1[0]],[z1[1],vec1[1]],[z1[2],vec1[2]])
 
+            ### TODO: do proper transformations
             vec2 = self.labData[i].vec2
             qua2 = self.labData[i].qua2
             x2,y2,z2 =  frameTransform(qua2, vec2)
+            ###
 
             ax.plot([x2[0],vec2[0]],[x2[1],vec2[1]],[x2[2],vec2[2]])
             ax.plot([y2[0],vec2[0]],[y2[1],vec2[1]],[y2[2],vec2[2]])
@@ -132,5 +144,5 @@ class trialData:
             plt.close()
 
 if __name__ == '__main__':
-    d = trialData('59435648-0-1000.txt', '59435648-0-1000-2016-05-15-at-23-36-37 .txt')
+    d = trialData('Data/53630541-0-1000', 'Data/53630541-0-1000-2016-05-23-at-14-49-41 .txt')
     d.plotData('')
