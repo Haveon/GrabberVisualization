@@ -9,9 +9,9 @@ class LaptopLine:
         self.afterJoystickTS = datetime.strptime(split[1], dateSetting)
         self.joystick        = map(float, split[2:4])
         self.afterServoSetTS = datetime.strptime(split[4], dateSetting)
-        self.servoSet        = map(int, split[6:10])
-        self.afterServoReadTS= datetime.strptime(split[10], dateSetting)
-        self.servoRead       = map(int, split[12:])
+        self.servoSet        = map(int, split[5:9])
+        self.afterServoReadTS= datetime.strptime(split[9], dateSetting)
+        self.servoRead       = map(int, split[10:])
 
     def __repr__(self):
         return 'Data from time {}'.format(self.startTime)
@@ -37,10 +37,12 @@ class LaptopFile:
             self.data.append(datum)
 
         endGoalLine = lines[-2][:-1]
-        self.endGoal= map(int, endGoalLine[24:-1].split(','))
+        endGoalLine = endGoalLine[endGoalLine.rfind(':')+3:-1].split(',')
+        self.endGoal= map(int, endGoalLine[1:])
 
         endServoPosLine = lines[-1][:-1]
-        self.endServoPos= map(int, endServoPosLine[23:-1].split(','))
+        endServoPosLine = endServoPosLine[endServoPosLine.rfind(':')+3:-1].split(',')
+        self.endServoPos= map(int, endServoPosLine[1:])
 
     def __repr__(self):
         batch  = 'Batch Number: {}, '.format(self.batchNumber)
@@ -100,10 +102,5 @@ class LabViewFile(object):
         return ''.join([batch,objNum,triNum,numData])
 
 if __name__ == '__main__':
-    #topFile = LaptopFile('59435648-0-1000.txt')
-    labFile = LabViewFile('Calibration/29169419-0-1000-2016-05-23-at-13-14-23 - 339 at the origin and 449 at its position.txt')
-    from numpy import array, mean
-    tmp = array([0., 0., 0.])
-    for i in range(45):
-        tmp += (array(labFile.data[-i].vec1) - array(labFile.data[-i].vec2))
-    print tmp/45
+    topFile = LaptopFile('Data/53630541-0-1000')
+    labFile = LabViewFile('Data/53630541-0-1000-2016-05-23-at-14-49-41 .txt')
