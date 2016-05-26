@@ -52,8 +52,8 @@ class LaptopFile:
 class LabViewLine(object):
     def __init__(self, line):
         line = line[line.find(':')+2:-1]
-        dateSetting = '%Y-%m-%d-at-%H-%M-%S.%f'
-        self.timeStamp = datetime.strptime(line[:25]+'0000', dateSetting)
+        dateSetting = '%Y-%m-%d-%H-%M-%S.%f'
+        self.timeStamp = datetime.strptime(line[:25], dateSetting)
 
         if 'Both Rigid bodies out of volume?' in line:
             self.vec1 = [0.0, 0.0, 0.0]
@@ -63,7 +63,7 @@ class LabViewLine(object):
             self.qua2 = [0.0, 0.0, 0.0, 0.0]
 
         else:
-            data = line[line.find(':')+1:].split('***')
+            data = line[line.rfind(':')+1:].split('***')
 
             tool1= data[0].split(',')
             self.vec1 = map(float, tool1[:3])
@@ -100,6 +100,10 @@ class LabViewFile(object):
         return ''.join([batch,objNum,triNum,numData])
 
 if __name__ == '__main__':
-    topFile = LaptopFile('59435648-0-1000.txt')
-    labFile = LabViewFile('59435648-0-1000-2016-05-15-at-23-36-37 .txt')
-    print topFile.data[2]
+    #topFile = LaptopFile('59435648-0-1000.txt')
+    labFile = LabViewFile('Calibration/29169419-0-1000-2016-05-23-at-13-14-23 - 339 at the origin and 449 at its position.txt')
+    from numpy import array, mean
+    tmp = array([0., 0., 0.])
+    for i in range(45):
+        tmp += (array(labFile.data[-i].vec1) - array(labFile.data[-i].vec2))
+    print tmp/45
