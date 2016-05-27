@@ -57,6 +57,7 @@ class trialData:
         self.palmToTool2 = np.loadtxt('339Calibration.txt', delimiter=',')
 
         self._synchronize()
+        self._referenceTransformation()
 
     def _synchronize(self):
         """
@@ -82,13 +83,13 @@ class trialData:
 
     def _getAxisMeasurements(self):
 
-        x1 = [_.vec1[0] for _ in self.labData]
-        y1 = [_.vec1[1] for _ in self.labData]
-        z1 = [_.vec1[2] for _ in self.labData]
+        x1 = [_[0] for _ in self.center1]
+        y1 = [_[1] for _ in self.center1]
+        z1 = [_[2] for _ in self.center1]
         
-        x2 = [_.vec2[0] for _ in self.labData]
-        y2 = [_.vec2[1] for _ in self.labData]
-        z2 = [_.vec2[2] for _ in self.labData]
+        x2 = [_[0] for _ in self.center2]
+        y2 = [_[1] for _ in self.center2]
+        z2 = [_[2] for _ in self.center2]
 
         xs,ys,zs = [_ for _ in x1+x2 if _ !=0.0], [_ for _ in y1+y2 if _ !=0.0], [_ for _ in z1+z2 if _ !=0.0]
         x_min, x_max = min(xs), max(xs)
@@ -98,7 +99,26 @@ class trialData:
         return ((x_min,x_max),(y_min,y_max),(z_min,z_max))
 
 
-    def _referenceTransformation():
+    def _referenceTransformation(self):
+        self.center1 = []
+        self.orientation1 = []
+        self.center2 = []
+        self.orientation2 = []
+        for datum in self.labData:
+            R1 = rotMatFromQuat(datum.qua1)
+            R2 = rotMatFromQuat(datum.qua2)
+
+            H1 = homogenousTransformationMatrix(R1, datum.vec1)
+            H2 = homogenousTransformationMatrix(R2, datum.vec2)
+
+            h1 = self.trackerToBowl.dot(H1.dot(self.palmToTool1))
+            h2 = self.trackerToBowl.dot(H2.dot(self.palmToTool2))
+
+            self.center1.append(h1[:-1,3])
+            self.center2.append(h2[:-1,3])
+
+            self.orientation1.append(h1[:-1,:-1])
+            self.orientation2.append(h2[:-1,:-1])
         return
 
     def plotData(self, fname):
@@ -114,35 +134,42 @@ class trialData:
             plt.ylim([14000,18000])
             plt.title(str(self.topData[i].startTime))
 
-            ### TODO: do proper transformations
-            vec1 = self.labData[i].vec1
-            qua1 = self.labData[i].qua1
-            x1,y1,z1 =  frameTransform(qua1, vec1)
-            ###
+            vec1 = self.center1[i]
+            x1,y1,z1 = self.orientation1[i][:,0],self.orientation1[i][:,1],self.orientation1[i][:,2]
+            x1 = 30*x1 +vec1
+            y1 = 30*y1 +vec1
+            z1 = 30*z1 +vec1
 
             ax = fig.add_subplot(122, projection='3d')
-            ax.plot([x1[0],vec1[0]],[x1[1],vec1[1]],[x1[2],vec1[2]])
-            ax.plot([y1[0],vec1[0]],[y1[1],vec1[1]],[y1[2],vec1[2]])
-            ax.plot([z1[0],vec1[0]],[z1[1],vec1[1]],[z1[2],vec1[2]])
+            ax.plot([x1[0],vec1[0]],[x1[1],vec1[1]],[x1[2],vec1[2]], 'r')
+            ax.plot([y1[0],vec1[0]],[y1[1],vec1[1]],[y1[2],vec1[2]], 'b')
+            ax.plot([z1[0],vec1[0]],[z1[1],vec1[1]],[z1[2],vec1[2]], 'g')
 
-            ### TODO: do proper transformations
-            vec2 = self.labData[i].vec2
-            qua2 = self.labData[i].qua2
-            x2,y2,z2 =  frameTransform(qua2, vec2)
-            ###
+            vec2 = self.center1[i]
+            x2,y2,z2 = self.orientation2[i][:,0],self.orientation2[i][:,1],self.orientation2[i][:,2]
+            x2 = 0*x2 +vec2
+            y2 = 0*y2 +vec2
+            z2 = 0*z2 +vec2
 
             ax.plot([x2[0],vec2[0]],[x2[1],vec2[1]],[x2[2],vec2[2]])
             ax.plot([y2[0],vec2[0]],[y2[1],vec2[1]],[y2[2],vec2[2]])
             ax.plot([z2[0],vec2[0]],[z2[1],vec2[1]],[z2[2],vec2[2]])
 
             plt.title(str(self.labData[i].timeStamp))
-            xBound, yBound, zBound = self._getAxisMeasurements()
-            ax.set_xlim(*xBound)
-            ax.set_ylim(*yBound)
-            ax.set_zlim(*zBound)
+            #xBound, yBound, zBound = self._getAxisMeasurements()
+            ax.set_xlim(-200,200)
+            ax.set_ylim(-200,200)
+            ax.set_zlim(0,300)
+
+            ax.plot([0,100],[0,0],[0,0],'k')
+            ax.plot([0,0],[0,100],[0,0],'k')
+            ax.plot([0,0],[0,0],[0,100],'k')
+            
             plt.savefig(fname+str(i)+'.png')
             plt.close()
 
 if __name__ == '__main__':
-    d = trialData('Data/53630541-0-1000', 'Data/53630541-0-1000-2016-05-23-at-14-49-41 .txt')
+    tFile = 'Data/33519252-0-1008'
+    dFile = 'Data/33519252-0-1008-2016-05-25-at-20-18-33 .txt'
+    d = trialData(tFile, dFile)
     d.plotData('')
