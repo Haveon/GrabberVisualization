@@ -25,14 +25,14 @@ class LaptopFile:
         info = name[11:].split('-')
         self.batchNumber, self.objectNumber, self.trialNumber = map(int, info)
 
-        clkDiff = lines[1][:-1]
+        clkDiff = lines[2][:-1]
         self.clockDifference = timedelta(microseconds=int(clkDiff[61:]))
 
-        servoStart = lines[2][:-1]
+        servoStart = lines[3][:-1]
         self.servoStartPos = servoStart[18:]
 
         self.data = []
-        for line in lines[3:-2]:
+        for line in lines[4:-2]:
             datum = LaptopLine(line[:-1])
             self.data.append(datum)
 
@@ -102,5 +102,5 @@ class LabViewFile(object):
         return ''.join([batch,objNum,triNum,numData])
 
 if __name__ == '__main__':
-    topFile = LaptopFile('Data/53630541-0-1000')
-    labFile = LabViewFile('Data/53630541-0-1000-2016-05-23-at-14-49-41 .txt')
+    topFile = LaptopFile('Data/33519252-0-1011')
+    labFile = LabViewFile('Data/33519252-0-1011-2016-05-25-at-20-20-24 .txt')
