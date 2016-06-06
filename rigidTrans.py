@@ -4,7 +4,8 @@ def extVec(vec):
     """
     Takes in an array as [x, y, z]
     """
-    vec = np.array(vec+[1])
+    vec = [_ for _ in vec] + [1]
+    vec = np.array(vec)
     vec.shape = (4,1)
     return vec
 
